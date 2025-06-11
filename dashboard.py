@@ -437,7 +437,8 @@ def main():
         water_meter_columns = [col for col in filtered_data.columns if col not in ["Year", "Month", "Week", "Day", "Time", "Basement Main", "Basement", "Hour", "CONSUMPTION (L)"]]
         if water_meter_columns:
             total_incoming = filtered_data["Basement Main"].sum() if "Basement Main" in filtered_data.columns else combined_data["Basement Main"].sum()
-            total_water_flow = filtered_data[water_meter_columns].sum().sum()
+            numeric_meter_columns = [col for col in water_meter_columns if pd.api.types.is_numeric_dtype(filtered_data[col])]
+            total_water_flow = filtered_data[numeric_meter_columns].sum(numeric_only=True).sum()
             total_unused = total_incoming - total_water_flow
             source, target, value = [], [], []
 
