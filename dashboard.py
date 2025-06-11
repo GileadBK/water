@@ -1,6 +1,5 @@
 import pandas as pd
 import streamlit as st
-from streamlit_extras.switch_page_button import switch_page
 import os
 import plotly.graph_objects as go
 import plotly.express as px
