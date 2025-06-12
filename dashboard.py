@@ -132,7 +132,7 @@ def main():
     
 
     # --- Metrics ---
-    average_water = highest_water = total_water_flow = highest_water_type = main_water = total_incoming_vs_main = "N/A"
+    average_water = highest_water = total_water_flow = highest_water_type = main_water = total_incoming_vs_main = hanley_water = total_incoming_vs_hanley = "N/A"
     if not filtered_data.empty:
         water_meter_columns = get_water_meter_columns(filtered_data)
         for col in water_meter_columns:
@@ -150,7 +150,7 @@ def main():
         if "CONSUMPTION (L)" in filtered_data.columns:
             filtered_data["CONSUMPTION (L)"] = pd.to_numeric(filtered_data["CONSUMPTION (L)"], errors='coerce')
             hanley_water = filtered_data["CONSUMPTION (L)"].sum()
-            total_incoming_vs_hanley = (f"{(100 - ((hanley_water / main_water ) * 100)).round(1)}%") if hanley_water > 0 else "N/A"        
+            total_incoming_vs_hanley = (f"{(100 - ((main_water / hanley_water ) * 100)).round(1)}%") if main_water > 0 else "N/A"        
     with col1:
         st.metric("Highest Water Flow (L)", f"{highest_water:,.0f}" if isinstance(highest_water, (int, float)) and highest_water != "N/A" else highest_water, border=True)
     with col2:
@@ -162,7 +162,7 @@ def main():
     with col5:
         st.metric("Used/Incoming Loss %", total_incoming_vs_main, border=True)
     with col6:
-        st.metric("Hanley/Incoming Loss %", total_incoming_vs_hanley, border=True)
+        st.metric("Incoming/Hanley Loss %", total_incoming_vs_hanley, border=True)
     with col7:
         st.metric("Incoming Water Total (L)", f"{main_water:,.0f}" if isinstance(main_water, (int, float)) and main_water != "N/A" else main_water, border=True)
     with col8:
@@ -522,6 +522,18 @@ def main():
             name="Total Hanley (CONSUMPTION (L))",
             line=dict(color="#ff7f0e")
         ))
+        # Add total sum of all water meters (excluding Basement Main and CONSUMPTION (L))
+        meter_cols = [col for col in filtered_data.columns if col not in ["Year", "Month", "Week", "Day", "Time", "Basement Main", "Basement", "Date", "DateTime", "Hour", "CONSUMPTION (L)"] and pd.api.types.is_numeric_dtype(filtered_data[col])]
+        if meter_cols:
+            filtered_data["Total Meters Sum"] = filtered_data[meter_cols].sum(axis=1, numeric_only=True)
+            fig_incoming_line.add_trace(go.Scattergl(
+                x=filtered_data[x_col],
+                y=filtered_data["Total Meters Sum"],
+                mode='lines+markers',
+                name="Total Sum of Meters",
+                line=dict(color="#2ca02c")
+            ))
+
         fig_incoming_line.update_layout(
             title="Total Incoming vs Hanley Water Over Time",
             xaxis_title=x_col,
@@ -530,6 +542,9 @@ def main():
             template="plotly_white"
         )
         st.plotly_chart(fig_incoming_line, use_container_width=True)
+
+if __name__ == "__main__":
+    main()
 
 if __name__ == "__main__":
     main()
