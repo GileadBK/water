@@ -62,7 +62,8 @@ def filter_by_sidebar(combined_data):
         "Select Date Range",
         value=(min_date, max_date),
         min_value=min_date,
-        max_value=max_date
+        max_value=max_date,
+        key="sidebar_date_range"
     )
     unique_years = ["All"] + list(combined_data['Year'].unique())
     unique_months = ["All"] + list(combined_data['Month'].unique())
