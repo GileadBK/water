@@ -5,7 +5,33 @@ import plotly.graph_objects as go
 import plotly.express as px
 
 st.set_page_config(page_title="Water Meter Dashboard", layout="wide")
-st.markdown("**Water Meter Dashboard**")
+st.markdown("""
+<style>
+    .main-header {
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: #54565B;
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+    .section-header {
+        font-size: 1.5rem;
+        font-weight: bold; 
+        color: #54565B;
+        margin: 1rem 0;
+        border-bottom: 2px solid #C5203F;
+        padding-bottom: 0.5rem;
+    }
+    .metric-container {
+        background-color: #C5203F;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        margin: 0.5rem 0;
+    }
+</style>
+""", unsafe_allow_html=True)
+
+st.markdown('<div class="main-header">Water Meter Dashboard</div>', unsafe_allow_html=True)
 
 csv_dir = 'cleaned_csv_data'
 EXCLUDE_COLS = ["Year", "Month", "Week", "Day", "Time", "Basement Main", "Basement", "Date", "Hour", "CONSUMPTION (L)"]
@@ -125,7 +151,7 @@ def filter_by_sidebar(combined_data):
     return filtered_data, water_meter, selected_years, selected_months, selected_weeks, selected_days, selected_times, date_range
 
 
-
+st.markdown('<div class="section-header">Key Performance Indicators</div>', unsafe_allow_html=True)
 def main():
     combined_data = load_data()
     filtered_data, water_meter, selected_years, selected_months, selected_weeks, selected_days, selected_times, date_range = filter_by_sidebar(combined_data)
@@ -133,6 +159,7 @@ def main():
     
 
     # --- Metrics ---
+    
     average_water = highest_water = total_water_flow = highest_water_type = main_water = total_incoming_vs_main = hanley_water = total_incoming_vs_hanley = "N/A"
     if not filtered_data.empty:
         water_meter_columns = get_water_meter_columns(filtered_data)
@@ -168,7 +195,9 @@ def main():
         st.metric("Incoming Water Total (L)", f"{main_water:,.0f}" if isinstance(main_water, (int, float)) and main_water != "N/A" else main_water, border=True)
     with col8:
         st.metric("Hanley Water Total (L)", f"{hanley_water:,.0f}" if isinstance(hanley_water, (int, float)) and hanley_water != "N/A" else hanley_water, border=True)
-    st.divider()
+    
+
+    st.markdown('<div class="section-header">Time Series Analysis</div>', unsafe_allow_html=True)
     col14 = st.columns(1)[0]
     with col14:
         resample_interval = st.selectbox(
@@ -429,10 +458,10 @@ def main():
             label_visibility="visible",
             border=True
         )
-    st.divider()
 
 
     print(filtered_data.head(10))
+    st.markdown('<div class="section-header">Advanced Analytics</div>', unsafe_allow_html=True)
     # --- Sankey and Pie Chart ---
     if not filtered_data.empty and all(col in combined_data.columns for col in ["Year", "Month", "Week", "Day", "Time"]):
         water_meter_columns = [col for col in filtered_data.columns if col not in ["Year", "Month", "Week", "Day", "Time", "Basement Main", "Basement", "Hour", "CONSUMPTION (L)"]]
