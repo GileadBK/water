@@ -4,8 +4,8 @@ from datetime import datetime
 import os
 import calendar
 
-input_dir = 'csv_data'
-output_dir = 'cleaned_csv_data'
+input_dir = 'unlcean_csvs'
+output_dir = 'csvs'
 os.makedirs(output_dir, exist_ok=True)
 
 def clean_temetra_logger(input_file, output_file):
@@ -147,4 +147,5 @@ for file_name in os.listdir(input_dir):
             print(f"Appended and updated file: {output_file_path}")
         else:
             clean_general_csv(input_file_path, output_file_path)
+
 
