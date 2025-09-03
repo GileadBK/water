@@ -33,7 +33,7 @@ st.markdown("""
 
 st.markdown('<div class="main-header">Water Meter Dashboard</div>', unsafe_allow_html=True)
 
-csv_dir = 'cleaned_csv_data'
+csv_dir = 'csvs'
 EXCLUDE_COLS = ["Year", "Month", "Week", "Day", "Time", "Basement Main", "Basement", "Date", "Hour", "CONSUMPTION (L)"]
 
 @st.cache_data
@@ -575,5 +575,6 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
