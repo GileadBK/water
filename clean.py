@@ -4,7 +4,7 @@ from datetime import datetime
 import os
 import calendar
 
-input_dir = 'unlcean_csvs'
+input_dir = 'unclean_csvs'
 output_dir = 'csvs'
 os.makedirs(output_dir, exist_ok=True)
 
