@@ -1,0 +1,69 @@
+def clean_uploaded_csv(uploaded_file):
+    # Try to detect if it's a temetra-logger file (header not always first row)
+    content = uploaded_file.read()
+    try:
+        text = content.decode('latin1')
+    except Exception:
+        text = content.decode('utf-8')
+    lines = text.splitlines()
+    header_idx = None
+    for i, line in enumerate(lines):
+        if line.strip().startswith('TIME,'):
+            header_idx = i
+            break
+
+    if header_idx is not None:
+        # temetra-logger style
+        df = pd.read_csv(io.StringIO(text), skiprows=header_idx)
+        if 'TIME' in df.columns and 'CONSUMPTION (L)' in df.columns:
+            df = df[['TIME', 'CONSUMPTION (L)']]
+            df = df.dropna(subset=['TIME', 'CONSUMPTION (L)'])
+            df = df[df['TIME'].str.match(r'\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}')]
+            df['Timestamp'] = pd.to_datetime(df['TIME'])
+            df.drop(columns=['TIME'], inplace=True)
+        else:
+            st.error("Uploaded file does not have expected columns.")
+            return None
+    else:
+        # Standard meter file
+        df = pd.read_csv(io.StringIO(text))
+        # Rename columns for meters
+        df.rename(columns=lambda col: col[13:-4] if col.endswith(' (L)') and len(col) > 13 else col, inplace=True)
+        # Find a datetime column
+        datetime_col = None
+        for col in ['Timestamp', 'TIME', 'DateTime', 'Date', 'time', 'datetime']:
+            if col in df.columns:
+                datetime_col = col
+                break
+        if not datetime_col:
+            st.error("No datetime column found in uploaded file.")
+            return None
+        df['Timestamp'] = pd.to_datetime(df[datetime_col])
+        if datetime_col != 'Timestamp':
+            df.drop(columns=[datetime_col], inplace=True)
+
+    df.fillna(0, inplace=True)
+    df['Date'] = df['Timestamp'].dt.date
+    df['Year'] = df['Timestamp'].dt.year
+    df['Month'] = df['Timestamp'].dt.month
+    df['Day'] = df['Timestamp'].dt.strftime('%a')
+    df['Time'] = df['Timestamp'].dt.time
+    df['Month'] = df['Month'].map(lambda x: calendar.month_abbr[x])
+    df['Week'] = df['Timestamp'].dt.dayofyear.apply(lambda x: math.ceil(x / 7))
+    df.drop(columns=['Timestamp'], inplace=True)
+    column_order = ['Year', 'Month', 'Day', 'Date', 'Time', 'Week'] + [col for col in df.columns if col not in ['Year', 'Month', 'Day', 'Date', 'Time', 'Week']]
+    df = df[column_order]
+    return df
+
+
+
+# --- Streamlit file uploader and cleaning ---
+uploaded_file = st.file_uploader("Upload a CSV file to clean", type=["csv"])
+if uploaded_file is not None:
+    cleaned_df = clean_uploaded_csv(uploaded_file)
+    if cleaned_df is not None:
+        st.success("File cleaned successfully!")
+        st.dataframe(cleaned_df.head())
+        # Optionally, allow download
+        csv = cleaned_df.to_csv(index=False).encode('utf-8')
+        st.download_button("Download cleaned CSV", csv, "cleaned_data.csv", "text/csv")
